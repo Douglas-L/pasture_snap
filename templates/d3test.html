@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Pasture Snap</title>
+    <script src="https://d3js.org/d3.v5.min.js" ></script>
+
+</head>
+
+<body>
+    
+     <table>
+             <tr>
+                    <th> Total: </th>
+                    <td> {{ pred['sub_images']  }} </td>
+               </tr>
+          <tr>
+                    <th> Forbs: </th>
+                    <td> {{ '%.1f%%' % (pred['forbs']*100)  }} </td>
+               </tr>
+          <tr>
+                    <th> Grass: </th>
+                    <td> {{ '%.1f%%' % (pred['grass']*100)  }} </td>
+               </tr>
+          <tr>
+                    <th> Ground: </th>
+                    <td> {{ '%.1f%%' % (pred['ground']*100)  }} </td>
+               </tr>
+          <tr>
+                    <th> Weeds: </th>
+                    <td> {{ '%.1f%%' % (pred['weeds']*100)  }} </td>
+               </tr>
+          
+<!--           <tr>
+              <th> Accumulated Prob </th>
+              <td> {{ pred['all_prob_mat'] }} </td> -->
+            </table>
+<div id="grid" style="background-image:url({{url_for("send_image", filename=img_name)}}); width: 100%; background-size: cover;"> 
+
+</div>
+
+<!-- <div style="display:none;"> -->
+     
+
+<script>
+  
+     
+   
+
+function gridData(width, height) {
+    var data = new Array();
+    var num_cols = {{pred['sacross']}};
+    var num_rows = {{pred['sdown']}};
+    var xpos = {{pred['pad_x']}}; //start at buffer_x
+    var ypos = {{pred['pad_y']}}; //start at buffer_y
+    var colwidth = width / num_cols - 2; //should be image.width - buffer /# of columns
+    var colheight = height / num_rows - 2; // image.height - buffer /# of rows
+
+  // var click = 0;
+    var pred_cls = {{pred['pred_mat'] | tojson}};
+    var prob_cls = {{pred['prob_mat']| tojson}};
+    var all_probs = {{pred['all_probs']| tojson}};
+	// iterate for rows
+	for (var row = 0; row < num_rows; row++) { //where 10 is X rows of subimages
+		data.push( new Array() );
+
+		// iterate for cells/columns inside rows
+		for (var column = 0; column < num_cols; column++) { //replace 10 with y columns
+			data[row].push({
+				x: xpos,
+				y: ypos,
+				width: colwidth,
+				height: colheight,
+                prediction: pred_cls[row*num_cols+column],  // top_class,
+                pred_prob: prob_cls[row*num_cols+column], // max_prob,
+                probabilities: all_probs[row*num_cols+column] //show onclick?
+
+                           });
+			// increment the x position. I.e. move it over by 50 (width variable)
+			xpos += colwidth;
+		}
+		// reset the x position after a row is complete
+		xpos = {{pred['pad_x']}};
+		// increment the y position for the next row. Move it down 50 (height variable)
+		ypos += colheight;
+	}
+	return data;
+};
+
+
+// // I like to log the data to the console for quick debugging
+// console.log(gridData);
+    
+function drawGrid(width, height) {
+    
+    var gd = gridData(width, height);
+    
+    var grid = d3.select("#grid") //container svg
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    var row = grid.selectAll(".row") //row svg
+        .data(gd)
+        .enter().append("g")
+        .attr("class", "row");
+
+    var column = row.selectAll(".square") //draw squares
+        .data(function(d) { return d; })
+        .enter().append("rect")
+        .attr("class","square")
+        .attr("x", function(d) { return d.x; })
+        .attr("y", function(d) { return d.y; })
+        .attr("width", function(d) { return d.width })
+        .attr("height", function(d) { return d.height; })
+        .on("mouseover", function(){return tooltip.style("visibility", "visible");})
+        .on("mousemove", function(d){return tooltip.style("top",
+        (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px")
+            .text('Class:' + d.prediction + ' Confidence:' + d.pred_prob*100 + '%');})
+        .on("mouseout", function(){return tooltip.style("visibility", "hidden");})
+        .style("fill", "#fff")
+        .style("fill-opacity", "0.1")
+        .style("stroke", "#222");
+
+
+    var tooltip = d3.select("body")
+        .append("div")
+        .style("position", "absolute")
+        .style("z-index", "10")
+        .style("visibility", "hidden")
+        .style("color", "white")
+        .style("font-weight", "bolder")
+        .style("text-shadow", "black -2px 0px, black 0px 2px, black 2px 0px, black 0px -2px");
+}
+var img = new Image()
+    
+img.onload = function() {
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    var imgwidth = this.width;
+    var imgheight = this.height;
+    var height = w/imgwidth*imgheight 
+    drawGrid(w, height);
+}
+img.src = '{{url_for("send_image", filename=img_name)}}';
+    // d3.select('').
+
+</script>
+
+</body>
+</html>

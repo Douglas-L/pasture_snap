@@ -1,0 +1,31 @@
+
+
+def as_keras_metric(method):
+
+    import functools
+
+    from keras import backend as K
+
+    import tensorflow as tf
+
+    @functools.wraps(method)
+
+    def wrapper(self, args, **kwargs):
+
+        value, update = method(self, args, **kwargs)
+
+        K.get_session().run(tf.local_variables_initializer())
+
+        with tf.control_dependencies([update]):
+
+            value = tf.identity(value)
+
+        return value
+
+    return wrapper
+
+
+
+prec = as_keras_metric(metrics.precision)
+
+auc = as_keras_metric(metrics.auc)
