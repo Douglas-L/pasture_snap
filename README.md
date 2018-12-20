@@ -13,7 +13,7 @@ Pasture is grass managed as feed for animals. It is important to evaluate your p
 
 # Approach
 
-I took an iterative approach to this project, beginning with a simpler binary classification problem and gradually expanding the data sources and model capabilities to address my question of evaluating pasture quality from a field photo. I go into detail about that in my [blog post](link). I will focus on the final model on this page.  
+I took an iterative approach to this project, beginning with a simpler binary classification problem and gradually expanding the data sources and model capabilities to address my question of evaluating pasture quality from a field photo. I will focus on the final model on this page.  
 
 # Data
 
